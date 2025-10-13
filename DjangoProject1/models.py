@@ -2,6 +2,7 @@ from gridfs import GridFS
 from pymongo import MongoClient
 import os
 from collections import Counter
+from bson.objectid import ObjectId  # ObjectId를 사용하기 위해 import
 
 # --- 데이터베이스 및 분석 엔진 설정 (이전과 동일) ---
 client = MongoClient('mongodb://localhost:27017/')
@@ -22,7 +23,6 @@ def analyze_text(text_content):
 
 
 class OriginalFile:
-    """ "원본 서류 보관함" 역할: 원본 파일을 GridFS에 저장하고 읽어옵니다. """
     @staticmethod
     def save(filepath):
         filename = os.path.basename(filepath)
@@ -31,15 +31,14 @@ class OriginalFile:
             return db.fs.files.find_one({'filename': filename})['_id']
         with open(filepath, 'rb') as f:
             file_id = fs.put(f, filename=filename)
-            print(f"원본 파일 '{filename}'을 DB(GridFS)에 보관했습니다.")
+            print(f" 원본 파일 '{filename}'을 DB(GridFS)에 보관했습니다.")
             return file_id
 
     @staticmethod
     def read_content_by_filename(filename):
         try:
             grid_out = fs.find_one({'filename': filename})
-            if grid_out:
-                return grid_out.read().decode('utf-8')
+            if grid_out: return grid_out.read().decode('utf-8')
             return None
         except Exception as e:
             print(f"GridFS에서 파일 읽기 오류: {e}")
@@ -47,8 +46,6 @@ class OriginalFile:
 
 
 class AnalyzedText:
-    """ "분석 보고서 보관함" 역할: 분석된 결과를 저장하고 읽어옵니다. """
-
     def __init__(self, analysis_data, source_filename=None):
         self.analysis_data = analysis_data
         self.source_filename = source_filename
@@ -56,102 +53,111 @@ class AnalyzedText:
     def save(self):
         doc = {'source_filename': self.source_filename, 'analysis_data': self.analysis_data}
         result = db.analyzed_texts.insert_one(doc)
-        print(f"분석된 데이터('{self.source_filename}')가 DB에 성공적으로 저장되었습니다.")
+        print(f" 분석된 데이터('{self.source_filename}')가 DB에 성공적으로 저장되었습니다.")
         return result.inserted_id
 
     @staticmethod
     def find_by_filename(filename):
         return db.analyzed_texts.find_one({'source_filename': filename})
 
+    @staticmethod
+    def find_by_id(doc_id):
+        try:
+            return db.analyzed_texts.find_one({'_id': ObjectId(doc_id)})
+        except Exception:
+            return None
 
-# ✨✨✨ 여기에 순서도의 지능형 처리 로직을 구현한 "프로세스 관리자" 함수를 추가했습니다! ✨✨✨
+    @staticmethod
+    def generate_report_files(document, output_dir='.'):
+        if not document:
+            print("-> 파일 생성을 위한 데이터가 없어 건너뜁니다.")
+            return
+        analysis_data = document.get('analysis_data', {})
+        source_filename = document.get('source_filename', '원본 파일 정보 없음')
+        output_content = f"--- '{source_filename}' 분석 결과 ---\n\n"
+        output_content += f"전체 단어 수: {analysis_data.get('total_word_count', 0)}\n"
+        output_content += f"고유 단어 수: {analysis_data.get('unique_word_count', 0)}\n"
+        output_content += "\n--- 단어별 빈도수 ---\n"
+        if 'frequency' in analysis_data:
+            for word, count in analysis_data['frequency'].items():
+                output_content += f"{word} : {count}\n"
+        else:
+            output_content += "빈도수 정보가 없습니다.\n"
+        output_filepath = os.path.join(output_dir, "output.txt")
+        os.makedirs(output_dir, exist_ok=True)
+        with open(output_filepath, 'w', encoding='utf-8') as f:
+            f.write(output_content)
+        print(f"->  'output.txt' 파일이 성공적으로 배출되었습니다: {output_filepath}")
+
+
+# ✨✨✨ 이 함수의 return 문을 수정했습니다! ✨✨✨
 def process_article(filepath):
-    """
-    하나의 텍스트 파일을 순서도 로직에 따라 지능적으로 처리합니다.
-    """
     filename = os.path.basename(filepath)
     print("\n" + "-" * 50)
-    print(f"'{filename}' 파일 처리 시작...")
-
-    # 1. 가장 먼저, 이미 분석된 결과(Output)가 있는지 확인합니다.
-    print("1. 기존 분석 결과(Output)를 검색합니다...")
+    print(f" '{filename}' 파일 처리 시작...")
     existing_analysis = AnalyzedText.find_by_filename(filename)
     if existing_analysis:
-        print("-> 발견! 기존 분석 결과를 사용합니다. (작업 종료)")
-        return existing_analysis
+        print("-> 발견! 기존 분석 결과를 사용합니다.")
+        return existing_analysis  # 기존 문서는 원래 '신분증(딕셔너리)'이므로 OK
 
-    # 2. 분석 결과가 없다면, 혹시 원본 파일(IM)이라도 저장되어 있는지 확인합니다.
-    print("-> 없음. 다음으로 DB에 보관된 원본 파일(IM)을 검색합니다...")
+    print("-> 없음. DB에 보관된 원본 파일을 검색합니다...")
     archived_content = OriginalFile.read_content_by_filename(filename)
     if archived_content:
-        print("->  발견! DB에 보관된 원본 파일을 바탕으로 새로운 분석을 생성합니다.")
-        # DB에서 읽은 내용으로 분석을 수행합니다.
+        print("-> 발견! DB 원본으로 새로운 분석을 생성합니다.")
         processed_data = analyze_text(archived_content)
-        # 분석 결과를 모델에 담아 DB에 저장합니다.
         new_analysis = AnalyzedText(processed_data, filename)
-        new_analysis.save()
-        return new_analysis
+        new_analysis_id = new_analysis.save()
+        # 저장 후, DB에서 '신분증(문서)'을 다시 찾아서 반환합니다.
+        return AnalyzedText.find_by_id(new_analysis_id)
 
-    # 3. 원본 파일마저 없다면, 이것은 완전히 새로운 파일입니다.
-    print("-> 없음. 이것은 완전히 새로운 파일입니다. 처음부터 모든 작업을 시작합니다.")
+    print("-> 없음. 로컬 파일을 읽어 처음부터 처리합니다.")
     if not os.path.exists(filepath):
-        print(f"-> 오류! 로컬 경로에도 '{filepath}' 파일이 없습니다. (작업 종료)")
+        print(f"-> 오류! 로컬 경로에도 파일이 없습니다.")
         return None
 
-    # 로컬 파일을 읽습니다.
     with open(filepath, 'r', encoding='utf-8') as f:
         local_content = f.read()
-
-    # (선택사항이지만 좋은 습관) 원본을 DB에 보관(Archive)합니다.
     OriginalFile.save(filepath)
-
-    # 내용을 분석합니다.
     processed_data = analyze_text(local_content)
-
-    # 분석 결과를 DB에 저장합니다.
     new_analysis = AnalyzedText(processed_data, filename)
-    new_analysis.save()
-    return new_analysis
+    new_analysis_id = new_analysis.save()
+    return AnalyzedText.find_by_id(new_analysis_id)
 
 
-
-
-# --- 이 파일을 직접 실행할 경우에만 아래 코드가 동작 ---
 if __name__ == "__main__":
-
     def run_intelligent_processing_test():
         test_filepath = r"C:\Users\슈퍼컴\Desktop\text file\test.txt"
+        report_dir = r"C:\Users\슈퍼컴\Desktop\outt"
 
         print("\n" + "=" * 50)
         print("데이터 베이스 시나리오 테스트를 시작합니다.")
         print("=" * 50)
 
-        '''# db초기화부분
-        os.makedirs(os.path.dirname(test_filepath), exist_ok=True)
-        # 테스트를 위해 이전 기록 삭제
+        # 이전 기록 삭제
         db.analyzed_texts.delete_many({})
         db.fs.files.delete_many({})
         db.fs.chunks.delete_many({})
-        print("-> 테스트 환경 초기화 완료.")'''
+        print("-> 테스트 환경 초기화 완료")
 
-        # --- 시나리오 1: 완전히 새로운 파일 처리 ---
+        # --- 시나리오 1: 새로운 파일 처리 ---
         print("\n\n--- [시나리오 1] 새로운 파일 처리 ---")
-        process_article(test_filepath)
+        result_document = process_article(test_filepath)
+        AnalyzedText.generate_report_files(result_document, report_dir)
 
         # --- 시나리오 2: 이미 분석 결과가 있는 파일 처리 ---
         print("\n\n--- [시나리오 2] 이미 분석된 파일 처리 ---")
-        process_article(test_filepath)
+        result_document = process_article(test_filepath)
+        AnalyzedText.generate_report_files(result_document, report_dir)
 
         # --- 시나리오 3: 원본만 있고 분석 결과는 없는 파일 처리 ---
         print("\n\n--- [시나리오 3] 원본만 보관된 파일 처리 ---")
-        # 시나리오 3을 위해 인위적으로 분석 결과만 삭제
         db.analyzed_texts.delete_many({})
         print("-> (상황 조작: 분석 결과만 삭제됨)")
-        process_article(test_filepath)
+        result_document = process_article(test_filepath)
+        AnalyzedText.generate_report_files(result_document, report_dir)
 
-        # --- 테스트 뒷정리 ---
         #if os.path.exists(test_filepath): os.remove(test_filepath)
-        print("\n\n 모든 테스트가 완료되었습니다.")
+        print("\n\n✨ 모든 테스트가 완료되었습니다.")
 
 
     run_intelligent_processing_test()
