@@ -17,6 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+# DjangoProject1/urls.py (프로젝트 레벨)
+
+from django.contrib import admin
+from django.urls import path, include
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # 메인 페이지 및 카테고리 링크를 myapp에 연결
+    path('', include('analysis_app.urls')),
 ]

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>오류 발생</title>
+</head>
+<body>
+    <h1>오류가 발생했습니다.</h1>
+
+    {% if message %}
+        <p><strong>오류 메시지:</strong> {{ message }}</p>
+        <hr>
+        <p>
+            데이터베이스 연결, 'make_imfiles' 명령 실행, 또는 파일 경로(data/bbc-news-data.csv)를 다시 확인해 주세요.
+        </p>
+    {% else %}
+        <p>알 수 없는 오류가 발생했습니다.</p>
+    {% endif %}
+
+    <p><a href="{% url 'index' %}">메인 페이지로 돌아가기</a></p>
+</body>
+</html>

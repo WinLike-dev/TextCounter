@@ -1,13 +1,13 @@
 ## 실행
 
-python 3.7 이상 버전 설치 후
-
 ```
-# 가상환경 생성 
+# 가상환경 생성  (파이썬 3.12 버전)
 python -m venv venv
 
-# 가상환경 실행
+# 가상환경 실행 (유닉스)
 source ./venv/Scripts/activate
+(윈도우)
+.\venv\Scripts\activate
 
 # 필요 package 설치
 pip install -r requirements.txt

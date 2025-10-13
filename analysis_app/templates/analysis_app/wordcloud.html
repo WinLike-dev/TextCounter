@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ category }} 워드 클라우드</title>
+    <style>
+        .word-list { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
+        .word-list ul { list-style: none; padding: 0; }
+        .word-list li { display: inline-block; margin-right: 15px; background: #f0f0f0; padding: 5px 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>{{ category }} 핵심 키워드 워드 클라우드</h1>
+
+    {% if image_base64 %}
+        <h2>워드 클라우드 이미지</h2>
+        <img src="{{ image_base64 }}" alt="{{ category }} Word Cloud" style="border: 1px solid #ccc; max-width: 100%;">
+
+        <div class="word-list">
+            <h2>상위 {{ top_words|length }}개 단어 목록</h2>
+            <ul>
+                {% for word, count in top_words %}
+                    <li><strong>{{ word }}</strong> ({{ count }}회)</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p>워드 클라우드를 생성할 데이터를 찾을 수 없습니다.</p>
+    {% endif %}
+
+    <p><a href="{% url 'index' %}">메인 페이지로 돌아가기</a></p>
+</body>
+</html>

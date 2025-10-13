@@ -1,0 +1,12 @@
+# Python Virtual Environments
+venv/
+.venv/
+__pycache__/
+
+# Byte-compiled / Optimized files
+*.pyc
+
+# IDEs and Editors
+.idea/      # PyCharm project files
+*.sublime-project
+*.vscode/   # VS Code settings

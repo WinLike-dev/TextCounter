@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>뉴스 분석 워드 클라우드</title>
+</head>
+<body>
+    <h1>주요 뉴스 카테고리 분석</h1>
+
+    {% if success_message %}
+        <p style="color: green; font-weight: bold; border: 1px solid green; padding: 10px;">
+            {{ success_message }}
+        </p>
+    {% endif %}
+
+    <form method="POST" action="{% url 'rebuild_imfiles' %}">
+        {% csrf_token %}
+        <button type="submit"
+                onclick="return confirm('경고: 원본 CSV 파일을 읽어 명사를 다시 추출하고 DB의 category_nouns 컬렉션을 덮어씁니다. 시간이 소요될 수 있습니다. 계속하시겠습니까?');"
+                style="background-color: #d81b60; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">
+            🔄 ImFiles 데이터 재생성 (원본 데이터 초기화)
+        </button>
+    </form>
+
+    <hr>
+
+    <h2>카테고리별 워드 클라우드</h2>
+    <p>아래 링크를 클릭하면 OutputFiles 캐시를 확인/생성합니다.</p>
+    <ul>
+        {% for category in categories %}
+        <li>
+            <a href="{% url 'wordcloud_view' category_name=category %}">
+                {{ category|upper }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
+# Quick-start development settings - unsuitafble for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'analysis_app'
 ]
 
 MIDDLEWARE = [
@@ -73,10 +74,17 @@ WSGI_APPLICATION = 'DjangoProject1.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'djongo',
+        'NAME': 'your_database_name',  # 사용할 MongoDB 데이터베이스 이름
+        'CLIENT': {
+            'host': 'mongodb://localhost:27017/',  # MongoDB가 실행 중인 주소 및 포트
+            'authMechanism': 'SCRAM-SHA-1', # 인증 메커니즘 설정 (필요한 경우)
+            'username': 'mongouser', # MongoDB 사용자 이름 (필요한 경우)
+            'password': '1234', # MongoDB 암호 (필요한 경우)
+        }
     }
 }
 
