@@ -64,19 +64,23 @@ class AnalyzedText:
         return db.analyzed_texts.find_one({'source_filename': filename})
 
 
+# ✨✨✨ 여기에 순서도의 지능형 처리 로직을 구현한 "프로세스 관리자" 함수를 추가했습니다! ✨✨✨
 def process_article(filepath):
+    """
+    하나의 텍스트 파일을 순서도 로직에 따라 지능적으로 처리합니다.
+    """
     filename = os.path.basename(filepath)
     print("\n" + "-" * 50)
     print(f"'{filename}' 파일 처리 시작...")
 
-    # 1.  이미 분석된 Output이 있는지 확인합니다.
+    # 1. 가장 먼저, 이미 분석된 결과(Output)가 있는지 확인합니다.
     print("1. 기존 분석 결과(Output)를 검색합니다...")
     existing_analysis = AnalyzedText.find_by_filename(filename)
     if existing_analysis:
         print("-> 발견! 기존 분석 결과를 사용합니다. (작업 종료)")
         return existing_analysis
 
-    # 2. output 없다면, IM이 저장되어 있는지 확인
+    # 2. 분석 결과가 없다면, 혹시 원본 파일(IM)이라도 저장되어 있는지 확인합니다.
     print("-> 없음. 다음으로 DB에 보관된 원본 파일(IM)을 검색합니다...")
     archived_content = OriginalFile.read_content_by_filename(filename)
     if archived_content:
@@ -88,7 +92,7 @@ def process_article(filepath):
         new_analysis.save()
         return new_analysis
 
-    # 3. 둘다 없는 경우 새롭게 output, im파일 생성
+    # 3. 원본 파일마저 없다면, 이것은 완전히 새로운 파일입니다.
     print("-> 없음. 이것은 완전히 새로운 파일입니다. 처음부터 모든 작업을 시작합니다.")
     if not os.path.exists(filepath):
         print(f"-> 오류! 로컬 경로에도 '{filepath}' 파일이 없습니다. (작업 종료)")
@@ -116,19 +120,19 @@ def process_article(filepath):
 if __name__ == "__main__":
 
     def run_intelligent_processing_test():
-        test_filepath = r"C:\Users\슈퍼컴\Desktop\text file\test2.txt"
+        test_filepath = r"C:\Users\슈퍼컴\Desktop\text file\test.txt"
 
         print("\n" + "=" * 50)
         print("데이터 베이스 시나리오 테스트를 시작합니다.")
         print("=" * 50)
 
-        # db초기화부분
+        '''# db초기화부분
         os.makedirs(os.path.dirname(test_filepath), exist_ok=True)
         # 테스트를 위해 이전 기록 삭제
         db.analyzed_texts.delete_many({})
         db.fs.files.delete_many({})
         db.fs.chunks.delete_many({})
-        print("-> 테스트 환경 초기화 완료.")
+        print("-> 테스트 환경 초기화 완료.")'''
 
         # --- 시나리오 1: 완전히 새로운 파일 처리 ---
         print("\n\n--- [시나리오 1] 새로운 파일 처리 ---")
@@ -146,7 +150,6 @@ if __name__ == "__main__":
         process_article(test_filepath)
 
         # --- 테스트 뒷정리 ---
-        # test파일 삭제 하는 부분
         #if os.path.exists(test_filepath): os.remove(test_filepath)
         print("\n\n 모든 테스트가 완료되었습니다.")
 
