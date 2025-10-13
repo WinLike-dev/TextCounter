@@ -90,7 +90,6 @@ class AnalyzedText:
         print(f"->  'output.txt' 파일이 성공적으로 배출되었습니다: {output_filepath}")
 
 
-# ✨✨✨ 이 함수의 return 문을 수정했습니다! ✨✨✨
 def process_article(filepath):
     filename = os.path.basename(filepath)
     print("\n" + "-" * 50)
@@ -157,7 +156,6 @@ if __name__ == "__main__":
         AnalyzedText.generate_report_files(result_document, report_dir)
 
         #if os.path.exists(test_filepath): os.remove(test_filepath)
-        print("\n\n✨ 모든 테스트가 완료되었습니다.")
 
 
     run_intelligent_processing_test()
