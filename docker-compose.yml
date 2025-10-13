@@ -17,17 +17,17 @@ services:
     environment:
       - MONGO_HOST=db       # 호스트 이름은 서비스 이름인 'db'로 지정
       - MONGO_PORT=27017
-      - MONGO_DB=news_analysis_db
-      # 인증 필요 시 아래 두 줄의 주석을 해제하고 값을 설정해야 합니다.
-      # - MONGO_USER=youruser
-      # - MONGO_PASS=yourpass
+      - MONGO_DB=BBC_analysis_db
+        # 인증 필요 시 아래 두 줄의 주석을 해제하고 값을 설정해야 합니다.
+      - MONGO_USER=mongouser
+      - MONGO_PASS=1234
 
     # Django 서버 시작 명령어: 0.0.0.0으로 바인딩해야 외부 접근이 가능합니다.
     command: python manage.py runserver 0.0.0.0:8000
 
     # 로컬 디렉토리의 파일을 컨테이너 내부에 마운트하여 실시간 코드 변경 가능하게 함
     volumes:
-      - .:/usr/src/app
+      - .:/usr/src/app # 🌟 하이픈 앞 들여쓰기 확인
 
   # 2. MongoDB 데이터베이스 서비스 (db)
   db:
@@ -36,9 +36,11 @@ services:
     # 데이터 영속성을 위해 'mongo_data' 볼륨을 사용하여 DB 데이터를 보존
     volumes:
       - mongo_data:/data/db
-    # 외부 접근 포트는 필요하지 않지만, 외부 GUI 툴 접속을 원하면 아래 주석을 해제하세요.
-    # ports:
-    #   - "27017:27017"
+    ports:
+       - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongouser
+      - MONGO_INITDB_ROOT_PASSWORD=1234
 
 # 데이터 볼륨 정의 (DB 데이터가 컨테이너 삭제 후에도 남아있도록 함)
 volumes:

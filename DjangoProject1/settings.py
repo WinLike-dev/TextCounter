@@ -78,12 +78,15 @@ WSGI_APPLICATION = 'DjangoProject1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'your_database_name',  # 사용할 MongoDB 데이터베이스 이름
+        'NAME': 'BBC_analysis_db',
         'CLIENT': {
-            'host': 'mongodb://localhost:27017/',  # MongoDB가 실행 중인 주소 및 포트
-            'authMechanism': 'SCRAM-SHA-1', # 인증 메커니즘 설정 (필요한 경우)
-            'username': 'mongouser', # MongoDB 사용자 이름 (필요한 경우)
-            'password': '1234', # MongoDB 암호 (필요한 경우)
+            # 🌟 'db'는 docker-compose.yml에 정의된 MongoDB 서비스 이름입니다.
+            'host': 'db',
+            'port': 27017,
+            # 인증을 사용한다면 username, password, authSource도 여기에 추가해야 합니다.
+            'username': 'mongouser',
+            'password': '1234',
+            'authSource': 'admin',
         }
     }
 }

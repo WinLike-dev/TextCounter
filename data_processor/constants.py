@@ -1,9 +1,22 @@
 # data_processor/constants.py
-
+import os
 
 # <username>과 <password>를 정확히 입력
-MONGO_URI = "mongodb://mongouser:1234@localhost:27017/?authSource=admin"
-DB_NAME = "BBC_analysis_db"
+# MONGO_HOST: Docker Compose 서비스 이름 'db'를 사용하도록 기본값을 설정
+MONGO_HOST = os.environ.get('MONGO_HOST', 'db')
+MONGO_PORT = os.environ.get('MONGO_PORT', '27017')
+DB_NAME = os.environ.get('MONGO_DB', 'BBC_analysis_db') # DB 이름도 환경 변수 우선
+MONGO_USER = os.environ.get('MONGO_USER', 'mongouser') # 하드코딩된 값을 환경 변수 우선으로 변경
+MONGO_PASS = os.environ.get('MONGO_PASS', '1234')
+
+# ----------------------------------------------------------------------
+# MONGO_URI 구성 (동적 생성)
+# ----------------------------------------------------------------------
+# 🌟 MONGO_HOST 변수를 사용하여 URI를 완성합니다.
+MONGO_URI = (
+    f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/{DB_NAME}"
+    "?authSource=admin"
+)
 
 # ----------------------------------------------------------------------
 # 컬렉션 및 파일 경로 설정
