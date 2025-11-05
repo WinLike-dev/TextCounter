@@ -6,14 +6,37 @@
         .word-list { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
         .word-list ul { list-style: none; padding: 0; }
         .word-list li { display: inline-block; margin-right: 15px; background: #f0f0f0; padding: 5px 10px; border-radius: 5px; }
+
+        /* 💡 폼 스타일을 간단히 추가했습니다 (선택 사항) */
+        .date-filter-form { background-color: #f4f4f4; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .date-filter-form label { margin-right: 10px; font-weight: bold; }
+        .date-filter-form input[type="date"] { padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .date-filter-form button { padding: 8px 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>{{ category }} 핵심 키워드 워드 클라우드</h1>
 
+    <div class="date-filter-form">
+        <h2 style="margin-top: 0;">📅 날짜 범위 필터링 ({{ category }} 카테고리)</h2>
+        <form method="GET" action="{% url 'wordcloud_view' category_name=category %}">
+            <label for="start_date">시작 날짜:</label>
+            <input type="date" id="start_date" name="start_date" value="{{ current_start_date|date:'Y-m-d' }}">
+
+            <label for="end_date">종료 날짜:</label>
+            <input type="date" id="end_date" name="end_date" value="{{ current_end_date|date:'Y-m-d' }}">
+
+            <button type="submit">이 날짜로 다시 조회</button>
+        </form>
+    </div>
+    <hr>
+
+
     {% if image_base64 %}
         <h2>워드 클라우드 이미지</h2>
-        <img src="{{ image_base64 }}" alt="{{ category }} Word Cloud" style="border: 1px solid #ccc; max-width: 100%;">
+
+        <img src="{{ image_base64 }}" alt="{{ category }} Word Cloud"
+             style="border: 1px solid #ccc; width: 800px; height: auto;">
 
         <div class="word-list">
             <h2>상위 {{ top_words|length }}개 단어 목록</h2>
@@ -25,8 +48,9 @@
         </div>
     {% else %}
         <p>워드 클라우드를 생성할 데이터를 찾을 수 없습니다.</p>
+        <p>(선택한 날짜 범위에 '{{ category }}' 카테고리의 데이터가 없는지 확인해 주세요.)</p>
     {% endif %}
 
-    <p><a href="{% url 'index' %}">메인 페이지로 돌아가기</a></p>
+    <p style="margin-top: 30px;"><a href="{% url 'index' %}">메인 페이지로 돌아가기</a></p>
 </body>
 </html>
