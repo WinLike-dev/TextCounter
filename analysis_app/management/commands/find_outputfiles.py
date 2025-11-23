@@ -1,58 +1,90 @@
 # myapp/management/commands/find_outputfiles.py
 
 from django.core.management.base import BaseCommand, CommandError
-from data_processor.cache_manager import get_top_words_and_manage_cache
-from analysis_app.views import CATEGORIES
+from data_processor.cache_manager import get_top_nouns_for_conditions
+from data_processor.constants import TOP_N
+from typing import Dict, Any
 
 
 class Command(BaseCommand):
-    help = '특정 카테고리(들)에 대해 output_files(웹 캐시)를 미리 생성하거나 강제로 업데이트합니다.'
+    help = '특정 조건(Title, Tags, Date Range)에 대해 OutputFiles 캐시를 미리 생성하거나 강제로 업데이트합니다.'
 
     def add_arguments(self, parser):
+
         parser.add_argument(
-            'categories',
-            nargs='*',
+            '--title',
             type=str,
-            help='캐시를 생성할 카테고리 이름 (예: business sport)'
+            default=None,
+            help='캐시를 생성할 Heading (Title)의 부분 일치 문자열 (예: Apple)'
+        )
+        parser.add_argument(
+            '--tags',
+            type=str,
+            default=None,
+            help='캐시를 생성할 Tags (예: Culture,Life - 쉼표로 구분)'
+        )
+        parser.add_argument(
+            '--start-date',
+            type=str,
+            default=None,
+            help='캐시를 생성할 날짜 범위의 시작일 (예: 2024-01-01)'
+        )
+        parser.add_argument(
+            '--end-date',
+            type=str,
+            default=None,
+            help='캐시를 생성할 날짜 범위의 종료일 (예: 2024-12-31)'
+        )
+        parser.add_argument(
+            '--top-n',
+            type=int,
+            default=TOP_N,
+            help=f'추출할 상위 단어 개수 (기본값: {TOP_N})'
         )
         parser.add_argument(
             '--force',
             action='store_true',
-            help='기존 캐시가 있어도 강제로 재생성합니다.'
+            help='기존 캐시가 있어도 강제로 재생성합니다. (cache_manager 함수가 이를 지원해야 함)'
         )
 
     def handle(self, *args, **options):
-        input_categories = options['categories']
+        title = options['title']
+        tags_input = options['tags']
+        start_date = options['start_date']
+        end_date = options['end_date']
+        top_n = options['top_n']
         force_reprocess = options['force']
 
-        # 처리할 카테고리 결정
-        categories_to_process = []
-        valid_categories = [c.lower() for c in CATEGORIES]
+        # tags_input을 쉼표로 분리하고 공백을 제거하여 리스트로 만듦
+        parsed_tags = [tag.strip() for tag in tags_input.split(',') if tag.strip()] if tags_input else None
 
-        if input_categories:
-            for cat in input_categories:
-                if cat.lower() in valid_categories:
-                    categories_to_process.append(cat.lower())
-                else:
-                    self.stdout.write(self.style.ERROR(f"유효하지 않은 카테고리입니다: {cat}"))
+        # 쿼리 객체(딕셔너리) 구성
+        query_conditions: Dict[str, Any] = {
+            'title': title,
+            'tags': parsed_tags,
+            'start_date': start_date,
+            'end_date': end_date,
+        }
 
-            if not categories_to_process:
-                raise CommandError("유효한 카테고리 인자가 없습니다.")
-        else:
-            categories_to_process = CATEGORIES
-            self.stdout.write("⚠️ 인자가 없어 모든 카테고리에 대해 캐시 작업을 시작합니다.")
+        # 💡 [수정] 최소 하나 이상의 조건 확인 로직 삭제: 조건이 없어도 전체 분석을 위해 진행합니다.
+        # if not (title or parsed_tags or start_date or end_date):
+        #     raise CommandError("Title, Tags, Start Date, End Date 중 최소한 하나는 인자로 제공해야 합니다.")
 
         self.stdout.write("\nOutputFiles 캐시 생성/업데이트 시작...")
 
-        for category in categories_to_process:
-            self.stdout.write(f" - [{category.upper()}] 캐시 처리 중 (Force: {force_reprocess})...")
+        tags_log = ", ".join(parsed_tags) if parsed_tags else '전체'
+        self.stdout.write(
+            f" - [Title: {title or '전체'}, Tags: {tags_log}, Date Range: {start_date or '전체'} ~ {end_date or '전체'}] 캐시 처리 중 (Top N: {top_n}, Force: {force_reprocess})...")
 
-            result = get_top_words_and_manage_cache(category, force_reprocess=force_reprocess)
+        # 쿼리 객체 전달
+        result = get_top_nouns_for_conditions(
+            query_conditions=query_conditions,
+            top_n=top_n
+        )
 
-            if result:
-                action = "재생성" if force_reprocess else ("확인/생성" if len(result) > 0 else "데이터 없음")
-                self.stdout.write(self.style.SUCCESS(f" - [{category.upper()}] 캐시 {action} 완료. ({len(result)}개 단어)"))
-            else:
-                self.stdout.write(self.style.WARNING(f" - [{category.upper()}] 데이터 처리 실패. ImFiles 생성을 먼저 확인하세요."))
-
-        self.stdout.write(self.style.SUCCESS("\nOutputFiles 캐시 관리 작업 완료."))
+        if result is None:
+            self.stdout.write(self.style.ERROR(" - 오류 발생: 데이터 처리 중 문제가 발생했습니다. (DB 연결 등)"))
+        elif result:
+            self.stdout.write(self.style.SUCCESS(f" - ✅ 조건부 캐시 생성/확인 완료. 상위 {len(result)}개 단어 저장됨."))
+        else:
+            self.stdout.write(self.style.WARNING(" - ⚠️ 경고: 조건에 맞는 레코드가 없거나 추출된 명사가 없습니다."))

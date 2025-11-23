@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ category }} 워드 클라우드</title>
+    <title>워드 클라우드</title>
     <style>
+        /* 기존 스타일 유지 */
         .centered-image {
             display: block;
             margin: 0 auto;
@@ -16,24 +17,34 @@
     </style>
 </head>
 <body>
-    <h1>{{ category }} 핵심 키워드 워드 클라우드</h1>
+    <h1>☁️ 핵심 키워드 워드 클라우드 분석 결과</h1>
+
+    <div class="search-conditions">
+        <h2>🔍 검색 조건</h2>
+        <p>
+            <strong>Title:</strong> {{ title }} |
+            <strong>Tags:</strong> {{ tags }} |
+            <strong>Date Range:</strong> {{ start_date }} ~ {{ end_date }} |
+            <strong>Top N:</strong> {{ top_n }}
+        </p>
+    </div>
 
     {% if image_base64 %}
         <h2>워드 클라우드 이미지</h2>
-        <img src="{{ image_base64 }}" alt="{{ category }} Word Cloud" class="centered-image">
+        <img src="{{ image_base64 }}" alt="Word Cloud" class="centered-image">
 
         <div class="word-list">
-            <h2>상위 {{ top_words|length }}개 단어 목록</h2>
+            <h2>상위 {{ top_words|length }}개 키워드 목록</h2>
             <ul>
-                {% for word, count in top_words %}
-                    <li><strong>{{ word }}</strong> ({{ count }}회)</li>
+                {% for item in top_words %}
+                    <li>{{ item.word }} ({{ item.count }})</li>
                 {% endfor %}
             </ul>
         </div>
     {% else %}
-        <p>워드 클라우드를 생성할 데이터를 찾을 수 없습니다.</p>
+        <p>⚠️ **경고:** 검색 조건에 해당하는 레코드가 없거나, 명사 추출 결과가 없습니다. 조건을 다시 설정해 주세요.</p>
     {% endif %}
 
-    <p><a href="{% url 'index' %}">메인 페이지로 돌아가기</a></p>
+    <p style="margin-top: 30px;"><a href="{% url 'index' %}">⬅️ 다른 조건으로 돌아가기</a></p>
 </body>
 </html>
