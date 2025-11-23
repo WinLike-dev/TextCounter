@@ -26,7 +26,8 @@ docker exec -it django-news-app python manage.py make_imfiles
 http://127.0.0.1:8000/
 or http://localhost:8000/
 
-# 컨테이너 종류할 때 
+=======
+# 추가 : 컨테이너 종료 시 
 docker-compose down -v
 
 ```
