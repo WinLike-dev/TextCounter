@@ -12,7 +12,9 @@ from data_processor.cache_manager import get_top_nouns_for_conditions
 from data_processor.importer import reset_all_db  # 마스터 전용 DB 초기화 함수 사용
 from data_processor.master_connector import distribute_importer_rebuild  # 분산 처리 기능 사용
 from data_processor.constants import TOP_N
-import time
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import json
 
 
 def generate_word_cloud_image(word_counts: List[Dict[str, int]]) -> Optional[str]:
@@ -171,3 +173,42 @@ def wordcloud_view(request):
     }
 
     return render(request, 'analysis_app/wordcloud.html', context)
+
+
+@require_POST
+@csrf_exempt
+def worker_notification_view(request):
+    """
+    Worker 서버로부터 데이터 재생성 완료 상태를 JSON 형태로 수신합니다.
+    (CSRF 토큰 검증은 비활성화합니다. 외부 API 통신이므로)
+    """
+    try:
+        # 1. POST 본문에서 JSON 데이터 파싱
+        data = json.loads(request.body.decode('utf-8'))
+
+        worker_name = data.get('worker_name', 'UNKNOWN_WORKER')
+        status = data.get('status', 'FAILURE')
+        message = data.get('message', 'No message provided.')
+
+        # 2. 콘솔에 로그 출력 (Master가 Worker의 완료 상태를 인지했음을 확인)
+        # 이 로그가 Master 서버의 Docker 컨테이너 로그에 떠야 합니다.
+        print(f"\n[Master] 🔔 Worker 알림 수신 ({worker_name})")
+        print(f"[Master]   - 상태: {status}")
+        print(f"[Master]   - 메시지: {message}")
+
+        # 3. Master 로직 (예: 작업 완료 카운트 업데이트, 다음 작업 지시 등)
+        # TODO: 필요하다면 여기에 분산 작업 상태를 관리하는 로직을 추가합니다.
+
+        # 4. Worker에게 성공 응답 반환
+        return JsonResponse({
+            "status": "received",
+            "message": f"Notification received from {worker_name}"
+        }, status=200)
+
+    except json.JSONDecodeError:
+        print("[Master] ❌ Worker 알림 수신 오류: 유효하지 않은 JSON 형식")
+        return JsonResponse({"status": "error", "message": "Invalid JSON format"}, status=400)
+
+    except Exception as e:
+        print(f"[Master] ❌ Worker 알림 처리 중 알 수 없는 오류: {e}")
+        return JsonResponse({"status": "error", "message": f"Server error: {e}"}, status=500)

@@ -27,9 +27,17 @@ TOP_N = 50
 # A. 🌟 워커 이름 및 할당된 파일 경로 목록 🌟
 WORKER_CHUNK_FILES = {
     "Worker-1": [
+        "data/2014.csv",
         "data/2015.csv",
-        "data/2018.csv",
-        "data/2022.csv"
+        "data/2016.csv"
+    ],
+    "Worker-2": [
+        "data/2017.csv",
+        "data/2018.csv"
+    ],
+    "Worker-3": [
+        "data/2019.csv",
+        "data/2020.csv"
     ]
 }
 

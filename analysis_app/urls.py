@@ -11,4 +11,6 @@ urlpatterns = [
     path('reset_all_db/', views.reset_all_db_view, name='reset_all_db'),
     # 조건부 워드클라우드 생성 엔드포인트
     path('wordcloud/', views.wordcloud_view, name='wordcloud_view'),
+# analysis_app/urls.py에 추가
+    path('worker_notification/', views.worker_notification_view, name='worker_notification'),
 ]
