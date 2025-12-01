@@ -6,3 +6,4 @@ djongo5
 wordcloud
 requests
 numpy
+requests

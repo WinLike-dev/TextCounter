@@ -1,47 +1,39 @@
-# docker-compose.yml
+# master_docker-compose.yml (Master/DB 디바이스에서 실행)
 
 version: '3.8'
 
 services:
-  # 1. Django 애플리케이션 서비스 (app)
-  app:
-    build: . # 현재 디렉토리의 Dockerfile을 사용하여 이미지를 빌드합니다.
-    container_name: django-news-app
-    # 호스트 PC의 8000번 포트와 컨테이너의 8000번 포트를 연결
-    ports:
-      - "8000:8000"
-    # 'db' 서비스가 시작될 때까지 기다렸다가 'app' 서비스를 시작
-    depends_on:
-      - db
-    # 🌟 MongoDB 접속 정보를 환경 변수로 전달합니다. (constants.py에서 사용됨)
-    environment:
-      - MONGO_HOST=db       # 호스트 이름은 서비스 이름인 'db'로 지정
-      - MONGO_PORT=27017
-      - MONGO_DB=BBC_analysis_db
-        # 인증 필요 시 아래 두 줄의 주석을 해제하고 값을 설정해야 합니다.
-      - MONGO_USER=mongouser
-      - MONGO_PASS=1234
-
-    # Django 서버 시작 명령어: 0.0.0.0으로 바인딩해야 외부 접근이 가능합니다.
-    command: python manage.py runserver 0.0.0.0:8000
-
-    # 로컬 디렉토리의 파일을 컨테이너 내부에 마운트하여 실시간 코드 변경 가능하게 함
-    volumes:
-      - .:/usr/src/app # 🌟 하이픈 앞 들여쓰기 확인
-
-  # 2. MongoDB 데이터베이스 서비스 (db)
+  # 1. MongoDB 서비스
   db:
-    image: mongo:latest # 최신 MongoDB 공식 이미지 사용
-    container_name: mongo-db-server
-    # 데이터 영속성을 위해 'mongo_data' 볼륨을 사용하여 DB 데이터를 보존
-    volumes:
-      - mongo_data:/data/db
+    image: mongo:latest
+    container_name: mongodb_db
     ports:
-       - "27017:27017"
+      - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=mongouser
       - MONGO_INITDB_ROOT_PASSWORD=1234
+    volumes:
+      - mongodb_data:/data/db
 
-# 데이터 볼륨 정의 (DB 데이터가 컨테이너 삭제 후에도 남아있도록 함)
+  # 2. Django 애플리케이션 서비스 (MASTER NODE)
+  app:
+    build: .
+    container_name: django-news-app-master
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - MONGO_HOST=db
+      - MONGO_PORT=27017
+      - MONGO_DB=BBC_analysis_db
+      - MONGO_USER=mongouser
+      - MONGO_PASS=1234
+      - WORKER_NAME=Master
+
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app
+
 volumes:
-  mongo_data:
+  mongodb_data:

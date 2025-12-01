@@ -3,114 +3,30 @@
 <head>
     <title>뉴스 분석 조건부 워드 클라우드</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        .container {
-            /* 💡 수정: 최대 너비를 1600px로 확장 */
-            max-width: 1600px;
-            /* 화면 너비에 따라 중앙 정렬 및 여백 추가 */
-            margin: 40px auto;
-            background: #fff;
-            padding: 50px;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-        }
-        h1, h2 {
-            color: #2c3e50;
-            border-bottom: 3px solid #e0e0e0;
-            padding-bottom: 15px;
-            margin-top: 30px;
-            font-weight: bold;
-        }
-        h1 {
-            text-align: center;
-            font-size: 2.5em;
-            margin-bottom: 40px;
-        }
-        hr {
-            border: 0;
-            height: 1px;
-            background: #ddd;
-            margin: 30px 0;
-        }
-        form {
-            margin-top: 25px;
-            padding: 25px;
-            border: 1px solid #c0c0c0;
-            border-radius: 8px;
-            background-color: #fafafa;
-        }
-        label {
-            display: inline-block;
-            width: 250px; /* label 너비 증가 */
-            margin-bottom: 12px;
-            font-weight: bold;
-            color: #34495e;
-            /* 폰트 크기 조정 */
-            font-size: 1.1em;
-        }
-        input[type="text"], input[type="number"] {
-            /* 입력 필드 너비 조정 */
-            width: calc(100% - 260px);
-            padding: 12px;
-            margin-bottom: 18px;
-            border: 1px solid #aaa;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 1.1em;
-        }
-        button {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-            font-weight: bold;
-            transition: background-color 0.3s, transform 0.2s;
-            font-size: 1.1em;
-        }
-        button:hover {
-            transform: translateY(-2px);
-        }
-        .btn-rebuild {
-            background-color: #e74c3c;
-            color: white;
-            margin-bottom: 40px;
-            display: block;
-            width: 100%;
-        }
-        .btn-rebuild:hover {
-            background-color: #c0392b;
-        }
-        .btn-analyze {
-            background-color: #3498db;
-            color: white;
-        }
-        .btn-analyze:hover {
-            background-color: #2980b9;
-        }
-        .message-success {
-            color: green;
-            font-weight: bold;
-            border: 1px solid green;
-            padding: 15px;
-            margin-bottom: 20px;
-            background-color: #eafaea;
-            border-radius: 6px;
-        }
-        .note {
-            color: #666;
-            padding: 15px;
-            background-color: #f7f7f7;
-            border-left: 5px solid #3498db;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 1600px; margin: 40px auto; background: #fff; padding: 50px; border-radius: 12px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.15); }
+        h1, h2 { color: #2c3e50; border-bottom: 3px solid #e0e0e0; padding-bottom: 15px; margin-top: 30px; font-weight: bold; }
+        h1 { text-align: center; font-size: 2.5em; margin-bottom: 40px; }
+        hr { border: 0; height: 1px; background: #ddd; margin: 30px 0; }
+        label { display: inline-block; width: 250px; margin-bottom: 12px; font-weight: bold; color: #34495e; font-size: 1.1em; }
+        input[type="text"], input[type="number"] { width: calc(100% - 260px); padding: 12px; margin-bottom: 18px; border: 1px solid #aaa; border-radius: 6px; box-sizing: border-box; font-size: 1.1em; }
+        button { padding: 15px 25px; border: none; border-radius: 8px; cursor: pointer; margin-top: 0px; font-weight: bold; transition: background-color 0.3s, transform 0.2s; font-size: 1.1em; }
+        .btn-analyze { background-color: #3498db; color: white; display: block; width: 100%; margin-top: 20px; }
+        .message-success { color: green; font-weight: bold; border: 1px solid green; padding: 15px; margin-bottom: 20px; background-color: #eafaea; border-radius: 6px; }
+        .message-warning { color: #f39c12; font-weight: bold; border: 1px solid #f39c12; padding: 15px; margin-bottom: 20px; background-color: #fff8e1; border-radius: 6px; }
+        .button-group { display: flex; justify-content: flex-start; gap: 15px; margin-bottom: 40px; padding: 25px; border: 1px solid #c0c0c0; border-radius: 8px; background-color: #fafafa; }
+        .button-group button { flex-grow: 0; flex-basis: 300px; }
+        .btn-dist { background-color: #1abc9c; color: white; }
+        .btn-reset { background-color: #7f8c8d; color: white; }
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 10px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0, 0, 0, .3); border-radius: 50%; border-top-color: #1abc9c; animation: spin 1s ease-in-out infinite; margin-right: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .worker-item { margin-top: 10px; padding: 8px; border: 1px solid #eee; border-radius: 4px; }
+        .status-success { color: #27ae60; font-weight: bold; }
+        .status-error { color: #e74c3c; font-weight: bold; }
+        .status-refused { color: #f39c12; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -123,46 +39,63 @@
             </p>
         {% endif %}
 
-        <form method="POST" action="{% url 'rebuild_imfiles' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="btn-rebuild"
-                    onclick="return confirm('경고: 원본 CSV 파일을 읽어 명사를 다시 추출하고 DB의 file_noun_records 컬렉션을 덮어씁니다. 시간이 소요될 수 있습니다. 계속하시겠습니까?');">
-                🔄 ImFiles 데이터 (file_noun_records) 재생성
+        {% if warning_message %}
+            <p class="message-warning" id="missingDataWarning">
+                {{ warning_message }}
+            </p>
+        {% endif %}
+
+        <h2>🔄 데이터 재생성 및 DB 관리 (분산 전용)</h2>
+        <div class="button-group">
+
+            <button id="startDistRebuildBtn"
+                    class="btn-dist"
+                    onclick="startDistributedRebuild(event)"
+                    >
+                🚀 분산 병렬 처리 시작 (팝업 표시)
             </button>
-        </form>
+
+            <form method="POST" action="{% url 'reset_all_db' %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="btn-reset"
+                        onclick="return confirm('🚨 경고: 모든 DB 컬렉션을 완전히 비웁니다. 계속하시겠습니까?');">
+                    🗑️ DB 초기화
+                </button>
+            </form>
+        </div>
 
         <hr>
 
         <h2>📊 워드 클라우드 검색 조건 설정</h2>
-        <form action="{% url 'wordcloud_view' %}" method="GET">
+        <form id="wordcloudForm" action="{% url 'wordcloud_view' %}" method="GET">
             <div class="note">
-                <strong>참고:</strong> 모든 필드를 비워두면 **전체 기사**를 대상으로 분석합니다.
+                <strong>참고:</strong> Title, Tags, Start Date, End Date 중 최소한 하나는 입력해야 합니다.
             </div>
 
             <div>
                 <label for="title">Title (기사 제목의 일부를 검색):</label>
-                <input type="text" id="title" name="title" placeholder="선택 사항, 부분 일치 검색" value=""><br>
+                <input type="text" id="title" name="title" placeholder="선택 사항, 부분 일치 검색" value="{{ query_params.title }}"><br>
             </div>
 
             <div>
-                <label for="tags">Tags (다중입력 가능):</label>
-                <input type="text" id="tags" name="tags" placeholder="선택 사항, 쉼표로 구분" value=""><br>
+                <label for="tags">Tags (예: Culture,Life, comma로 구분하여 여러 개 입력 가능):</label>
+                <input type="text" id="tags" name="tags" placeholder="선택 사항, 쉼표로 구분" value="{{ query_params.tags }}"><br>
             </div>
 
             <div>
                 <label for="start_date">Start Date (예: 2024-01-01):</label>
-                <input type="text" id="start_date" name="start_date" placeholder="선택 사항, YYYY-MM-DD" value=""><br>
+                <input type="text" id="start_date" name="start_date" placeholder="선택 사항, YYYY-MM-DD" value="{{ query_params.start_date }}"><br>
             </div>
 
             <div>
                 <label for="end_date">End Date (예: 2024-12-31):</label>
-                <input type="text" id="end_date" name="end_date" placeholder="선택 사항, YYYY-MM-DD" value=""><br>
+                <input type="text" id="end_date" name="end_date" placeholder="선택 사항, YYYY-MM-DD" value="{{ query_params.end_date }}"><br>
             </div>
 
             <div>
                 <label for="top_n">Top N (상위 단어 개수):</label>
-                <input type="number" id="top_n" name="top_n" placeholder="선택 사항, 기본값 {{ TOP_N }}" value="{{ TOP_N }}"><br>
+                <input type="number" id="top_n" name="top_n" placeholder="선택 사항, 기본값 {{ TOP_N }}" value="{{ query_params.top_n }}"><br>
             </div>
 
             <button type="submit" class="btn-analyze">
@@ -170,5 +103,132 @@
             </button>
         </form>
     </div>
+
+
+    <div id="distModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2>분산 Importer 작업 상태</h2>
+            <div id="modalStatus">
+                <div class="loading-spinner"></div>
+                <span id="loadingMessage">워커 서버에 명령 전달 및 응답 대기 중입니다...</span>
+            </div>
+
+            <p><strong>마스터 총 경과 시간 (가장 느린 워커 기준):</strong> <span id="masterTotalTime">0.000초</span></p>
+            <hr>
+            <div id="workerResults">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // CSRF 토큰 가져오기 함수
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+
+        // 모달 제어 및 분산 처리 로직
+        const modal = document.getElementById("distModal");
+        const workerResultsDiv = document.getElementById("workerResults");
+        const masterTotalTimeSpan = document.getElementById("masterTotalTime");
+        const loadingMessageSpan = document.getElementById("loadingMessage");
+        const startDistRebuildBtn = document.getElementById("startDistRebuildBtn");
+
+        function openModal() {
+            modal.style.display = "block";
+            startDistRebuildBtn.disabled = true;
+            startDistRebuildBtn.innerText = "처리 중...";
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+            startDistRebuildBtn.disabled = false;
+            startDistRebuildBtn.innerText = "🚀 분산 병렬 처리 시작 (팝업 표시)";
+            window.location.reload();
+        }
+
+        async function startDistributedRebuild(event) {
+            event.preventDefault();
+
+            if (!confirm('[분산 병렬] 3개 워커에 Importer 명령을 병렬 전송하고 응답을 대기합니다. 계속하시겠습니까?')) {
+                return;
+            }
+
+            workerResultsDiv.innerHTML = '';
+            masterTotalTimeSpan.innerText = '0.000초';
+            loadingMessageSpan.innerText = '워커 서버에 명령 전달 및 응답 대기 중입니다...';
+            document.getElementById('modalStatus').innerHTML = '<div class="loading-spinner"></div><span id="loadingMessage">워커 서버에 명령 전달 및 응답 대기 중입니다...</span>';
+            openModal();
+
+            try {
+                const response = await fetch("{% url 'start_distributed_rebuild' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                    },
+                });
+
+                const data = await response.json();
+
+                document.getElementById('modalStatus').innerHTML = `<span class="status-success">✅ 마스터 서버 처리 완료 (HTTP ${response.status})</span>`;
+
+                if (data.status === 'COMPLETED') {
+                    const totalTime = data.data.master_total_time.toFixed(4);
+                    const results = data.data.results;
+
+                    masterTotalTimeSpan.innerText = `${totalTime}초`;
+
+                    // 통신 시간 순으로 정렬하여 표시
+                    results.sort((a, b) => a.communication_time - b.communication_time);
+
+                    results.forEach(result => {
+                        let statusClass = '';
+                        let statusText = result.status;
+                        if (result.status === 'SUCCESS') { statusClass = 'status-success'; }
+                        else if (result.status === 'REFUSED' || result.status === 'TIMEOUT') { statusClass = 'status-refused'; }
+                        else { statusClass = 'status-error'; }
+
+                        const resultHtml = `
+                            <div class="worker-item">
+                                <strong>워커 (${result.worker}):</strong> <span class="${statusClass}">${statusText}</span>
+                                <ul>
+                                    <li>**Comm Time (명령~응답):** ${result.communication_time.toFixed(4)}초</li>
+                                    <li>**Proc Time (워커 순수 처리):** ${result.processing_time.toFixed(4)}초</li>
+                                    <li>**메시지:** ${result.message}</li>
+                                </ul>
+                            </div>
+                        `;
+                        workerResultsDiv.innerHTML += resultHtml;
+                    });
+
+                    closeModal();
+
+                } else {
+                     masterTotalTimeSpan.innerText = 'N/A';
+                     workerResultsDiv.innerHTML = `<div class="worker-item status-error"><strong>마스터 오류:</strong> ${data.message || '응답 데이터 오류'}</div>`;
+                }
+
+            } catch (error) {
+                document.getElementById('modalStatus').innerHTML = `<span class="status-error">❌ 통신 오류 발생</span>`;
+                masterTotalTimeSpan.innerText = 'N/A';
+                workerResultsDiv.innerHTML = `<div class="worker-item status-error"><strong>네트워크/파싱 오류:</strong> ${error.message}</div>`;
+                console.error("Distributed rebuild failed:", error);
+            }
+        }
+    </script>
 </body>
 </html>

@@ -1,50 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>워드 클라우드</title>
+    <title>WordCloud 결과</title>
     <style>
-        /* 기존 스타일 유지 */
-        .centered-image {
-            display: block;
-            margin: 0 auto;
-            border: 1px solid #ccc;
-            max-width: 100%;
-        }
-
-        .word-list { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
-        .word-list ul { list-style: none; padding: 0; }
-        .word-list li { display: inline-block; margin-right: 15px; background: #f0f0f0; padding: 5px 10px; border-radius: 5px; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px; margin-bottom: 30px; }
+        .query-info { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-left: 5px solid #3498db; background-color: #f9f9f9; border-radius: 4px; }
+        .query-info p { margin: 5px 0; }
+        .wordcloud-img-container { text-align: center; margin-bottom: 40px; }
+        .wordcloud-img { max-width: 100%; height: auto; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
+        .top-words-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+        .top-words-list li { background-color: #ecf0f1; padding: 8px 12px; border-radius: 20px; font-size: 1.0em; color: #2c3e50; font-weight: bold; }
+        .top-words-list li span { font-weight: normal; color: #95a5a6; margin-left: 5px; }
     </style>
 </head>
 <body>
-    <h1>☁️ 핵심 키워드 워드 클라우드 분석 결과</h1>
+    <div class="container">
+        <h1>📊 조건부 워드클라우드 결과 (Top {{ top_n }})</h1>
 
-    <div class="search-conditions">
-        <h2>🔍 검색 조건</h2>
-        <p>
-            <strong>Title:</strong> {{ title }} |
-            <strong>Tags:</strong> {{ tags }} |
-            <strong>Date Range:</strong> {{ start_date }} ~ {{ end_date }} |
-            <strong>Top N:</strong> {{ top_n }}
-        </p>
-    </div>
-
-    {% if image_base64 %}
-        <h2>워드 클라우드 이미지</h2>
-        <img src="{{ image_base64 }}" alt="Word Cloud" class="centered-image">
-
-        <div class="word-list">
-            <h2>상위 {{ top_words|length }}개 키워드 목록</h2>
+        <div class="query-info">
+            <p><strong>검색 조건 요약:</strong></p>
             <ul>
-                {% for item in top_words %}
-                    <li>{{ item.word }} ({{ item.count }})</li>
-                {% endfor %}
+                <li><strong>Title 검색어:</strong> {{ title }}</li>
+                <li><strong>Tags:</strong> {{ tags }}</li>
+                <li><strong>날짜 범위:</strong> {{ start_date }} ~ {{ end_date }}</li>
             </ul>
         </div>
-    {% else %}
-        <p>⚠️ **경고:** 검색 조건에 해당하는 레코드가 없거나, 명사 추출 결과가 없습니다. 조건을 다시 설정해 주세요.</p>
-    {% endif %}
 
-    <p style="margin-top: 30px;"><a href="{% url 'index' %}">⬅️ 다른 조건으로 돌아가기</a></p>
+        {% if image_base64 %}
+            <div class="wordcloud-img-container">
+                <img src="{{ image_base64 }}" alt="Word Cloud Image" class="wordcloud-img">
+            </div>
+
+            <h2>✨ 상위 {{ top_n }}개 명사 목록</h2>
+            <ul class="top-words-list">
+                {% for item in top_words %}
+                    <li>{{ item.word }}<span>({{ item.count }})</span></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: red; font-size: 1.2em;">
+                ⚠️ 경고: 주어진 검색 조건에 해당하는 기사 레코드가 데이터베이스에 없습니다. 조건을 완화하거나 분산 처리를 다시 실행해 주세요.
+            </p>
+        {% endif %}
+
+        <p style="margin-top: 50px;"><a href="{% url 'index' %}">메인 페이지로 돌아가기</a></p>
+    </div>
 </body>
 </html>

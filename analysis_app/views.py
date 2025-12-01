@@ -2,13 +2,17 @@
 
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.http import JsonResponse
 from wordcloud import WordCloud
 import io
 import base64
 from typing import List, Tuple, Optional, Dict, Any
+# 마스터 로직 임포트
 from data_processor.cache_manager import get_top_nouns_for_conditions
-from data_processor.importer import run_extraction_and_save_to_category_nouns
+from data_processor.importer import reset_all_db  # 마스터 전용 DB 초기화 함수 사용
+from data_processor.master_connector import distribute_importer_rebuild  # 분산 처리 기능 사용
 from data_processor.constants import TOP_N
+import time
 
 
 def generate_word_cloud_image(word_counts: List[Dict[str, int]]) -> Optional[str]:
@@ -16,28 +20,20 @@ def generate_word_cloud_image(word_counts: List[Dict[str, int]]) -> Optional[str
     word_freq_dict = {item['word']: item['count'] for item in word_counts}
     if not word_freq_dict: return None
 
-    # 💡 [수정] 폰트 경로를 사용하지 않고 WordCloud를 생성하여 OSError 방지
-    # 폰트 경로를 찾지 못하여 'OSError: cannot open resource'가 발생했습니다.
-    # 해당 부분을 제거하여 WordCloud가 시스템 기본 폰트를 사용하도록 합니다.
-    # try:
-    #     font_path = 'static/malgun.ttf'
-    #     wc = WordCloud(
-    #         background_color="white",
-    #         width=800, height=400, max_words=len(word_freq_dict),
-    #         font_path=font_path
-    #     )
-    # except ValueError:
-    #     # 폰트가 없을 경우 기본 폰트 사용
-    #     wc = WordCloud(
-    #         background_color="white",
-    #         width=800, height=400, max_words=len(word_freq_dict)
-    #     )
-
-    # 폰트 설정 없이 WordCloud 객체 생성
-    wc = WordCloud(
-        background_color="white",
-        width=800, height=400, max_words=len(word_freq_dict)
-    )
+    try:
+        # 폰트 경로 필요시 수정
+        font_path = 'static/malgun.ttf'
+        wc = WordCloud(
+            background_color="white",
+            width=800, height=400, max_words=len(word_freq_dict),
+            font_path=font_path
+        )
+    except ValueError:
+        # 폰트가 없을 경우 기본 폰트 사용
+        wc = WordCloud(
+            background_color="white",
+            width=800, height=400, max_words=len(word_freq_dict)
+        )
 
     wc.generate_from_frequencies(word_freq_dict)
 
@@ -49,20 +45,66 @@ def generate_word_cloud_image(word_counts: List[Dict[str, int]]) -> Optional[str
 
 
 def index(request):
-    """메인 페이지 뷰"""
+    """메인 페이지 뷰 (분산 전용)"""
     success_message = request.session.pop('success_message', None)
-    return render(request, 'analysis_app/index.html', {'success_message': success_message, 'TOP_N': TOP_N})
+    warning_message = request.session.pop('warning_message', None)
+
+    # 중간 데이터 존재 여부 확인 로직 제거로 이 플래그는 항상 False
+    show_rebuild_prompt = False
+
+    query_params = {
+        'title': request.GET.get('title', ''),
+        'tags': request.GET.get('tags', ''),
+        'start_date': request.GET.get('start_date', ''),
+        'end_date': request.GET.get('end_date', ''),
+        'top_n': request.GET.get('top_n', str(TOP_N)),
+    }
+
+    return render(request, 'analysis_app/index.html', {
+        'success_message': success_message,
+        'warning_message': warning_message,
+        'TOP_N': TOP_N,
+        'show_rebuild_prompt': show_rebuild_prompt,
+        'query_params': query_params,
+    })
 
 
-def rebuild_imfiles_view(request):
-    """DB 데이터 재생성 요청 처리 뷰"""
+def start_distributed_rebuild_view(request):
+    """[분산 병렬] DB 데이터 재생성 AJAX 요청 처리 뷰 (워커 호출)"""
     if request.method == 'POST':
         try:
-            run_extraction_and_save_to_category_nouns()
-            request.session['success_message'] = "✅ ImFiles 데이터(file_noun_records) 재생성 완료!"
+            # master_connector.py의 로직 호출
+            response_data = distribute_importer_rebuild()
+
+            master_total_time = response_data.get('master_total_time', 0.0)
+
+            request.session['success_message'] = f"✅ 분산 병렬 ImFiles 데이터 재생성 완료! (마스터 총 경과 시간: {master_total_time:.4f}초)"
+
+            return JsonResponse({
+                "status": "COMPLETED",
+                "message": "분산 명령 및 응답 수신 완료",
+                "data": response_data
+            })
+        except Exception as e:
+            return JsonResponse({
+                "status": "MASTER_ERROR",
+                "message": f"마스터 처리 중 오류 발생: {e}"
+            }, status=500)
+
+    return JsonResponse({"status": "ERROR", "message": "잘못된 요청 방식"}, status=400)
+
+
+def reset_all_db_view(request):
+    """모든 DB 컬렉션을 비우는 뷰 (importer.py의 reset_all_db 호출)"""
+    if request.method == 'POST':
+        try:
+            if reset_all_db():
+                request.session['success_message'] = "🗑️ 모든 DB 컬렉션이 성공적으로 초기화되었습니다."
+            else:
+                request.session['success_message'] = "⚠️ DB 초기화 중 오류가 발생했습니다. 로그를 확인하세요."
         except Exception as e:
             return render(request, 'analysis_app/error.html', {
-                'message': f'데이터 재생성 중 오류 발생: {e}'
+                'message': f'DB 초기화 중 치명적인 오류 발생: {e}'
             }, status=500)
 
     return redirect(reverse('index'))
@@ -85,7 +127,6 @@ def wordcloud_view(request):
     except ValueError:
         top_n = TOP_N
 
-    # tags_input을 쉼표로 분리하고 공백을 제거하여 리스트로 만듦
     parsed_tags = [tag.strip() for tag in tags_input.split(',') if tag.strip()] if tags_input else None
 
     # 2. 쿼리 객체(딕셔너리) 구성
@@ -96,13 +137,14 @@ def wordcloud_view(request):
         'end_date': end_date,
     }
 
-    # 💡 [이전 요청에 따라 제거됨] 유효성 검사 로직 삭제: 조건이 없어도 전체 분석을 위해 진행합니다.
-    # if not (title or parsed_tags or start_date or end_date):
-    #     return render(request, 'analysis_app/error.html', {
-    #         'message': 'Title, Tags, Start Date, End Date 중 최소한 하나는 입력해야 합니다.'
-    #     }, status=400)
+    # 유효성 검사: 최소 하나의 조건이 있어야 함
+    if not (title or parsed_tags or start_date or end_date):
+        return render(request, 'analysis_app/error.html', {
+            'message': 'Title, Tags, Start Date, End Date 중 최소한 하나는 입력해야 합니다.'
+        }, status=400)
 
-    # 3. cache_manager를 통해 조건부 명사 데이터 가져오기 (객체 전달)
+    # 3. cache_manager를 통해 조건부 명사 데이터 가져오기
+    # 이 함수 내부에서 1차 검색 실패 시 자동 재처리(rebuild) 후 2차 검색이 시도됩니다.
     top_words_data = get_top_nouns_for_conditions(
         query_conditions=query_conditions,
         top_n=top_n
@@ -118,7 +160,6 @@ def wordcloud_view(request):
 
     # 5. Context 구성 및 렌더링
     context = {
-        # 조건을 템플릿에 전달하여 표시
         'title': title or '전체',
         'tags': ', '.join(parsed_tags) if parsed_tags else '전체',
         'start_date': start_date or '전체',
