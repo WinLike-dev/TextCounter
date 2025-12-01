@@ -44,15 +44,16 @@ WORKER_CHUNK_FILES = {
 # B. 이 인스턴스(컨테이너)의 역할 및 파일 경로 동적 설정
 WORKER_NAME = os.environ.get('WORKER_NAME', 'Master')
 WORKER_FILE_PATH = WORKER_CHUNK_FILES.get(WORKER_NAME, None)
+WORKER_SERVER = "3.26.14.106"
 
 # C. 🌟 마스터가 사용할 워커 주소 목록 (Public IP 기반) 🌟
 #    * 중요: 이 IP를 각 워커 디바이스의 실제 Public/Private IP로 대체해야 합니다.
 #    * 49.168.187.55와 동일 대역의 임의의 Public IP를 가정합니다.
 WORKER_ADDRESSES = [
     # 📌 IP 주소가 Worker-1, 2, 3의 실제 Public IP와 일치하는지 확인하세요.
-    {"name": "Worker-1", "host": "54.206.23.163", "port": 8001},
-    {"name": "Worker-2", "host": "54.206.23.163", "port": 8002},
-    {"name": "Worker-3", "host": "54.206.23.163", "port": 8003},
+    {"name": "Worker-1", "host": WORKER_SERVER, "port": 8001},
+    {"name": "Worker-2", "host": WORKER_SERVER, "port": 8002},
+    {"name": "Worker-3", "host": WORKER_SERVER, "port": 8003}
 ]
 
 
