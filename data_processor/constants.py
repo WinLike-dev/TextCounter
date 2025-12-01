@@ -48,14 +48,12 @@ WORKER_FILE_PATH = WORKER_CHUNK_FILES.get(WORKER_NAME, None)
 # C. 🌟 마스터가 사용할 워커 주소 목록 (Public IP 기반) 🌟
 #    * 중요: 이 IP를 각 워커 디바이스의 실제 Public/Private IP로 대체해야 합니다.
 #    * 49.168.187.55와 동일 대역의 임의의 Public IP를 가정합니다.
-_DEFAULT_WORKER_ADDRESSES = (
-    "http://54.206.23.163:8001,"  # Worker-1 디바이스의 실제 IP
-    "http://54.206.23.163:8002,"  # Worker-2 디바이스의 실제 IP
-    "http://54.206.23.163:8003"   # Worker-3 디바이스의 실제 IP
-)
-
-_WORKER_ADDRESSES_STR = os.environ.get('WORKER_ADDRESSES', _DEFAULT_WORKER_ADDRESSES)
-WORKER_ADDRESSES = [addr.strip() for addr in _WORKER_ADDRESSES_STR.split(',') if addr.strip()]
+WORKER_ADDRESSES = [
+    # 📌 IP 주소가 Worker-1, 2, 3의 실제 Public IP와 일치하는지 확인하세요.
+    {"name": "Worker-1", "host": "54.206.23.163", "port": 8001},
+    {"name": "Worker-2", "host": "54.206.23.163", "port": 8002},
+    {"name": "Worker-3", "host": "54.206.23.163", "port": 8003},
+]
 
 
 # ----------------------------------------------------------------------
