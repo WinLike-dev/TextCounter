@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 from .constants import WORKER_ADDRESSES
 
-WORKER_REBUILD_PATH = "/rebuild/"
+WORKER_REBUILD_PATH = "/rebuild"
 TIMEOUT_SECONDS = 300  # 5분 타임아웃
 
 
