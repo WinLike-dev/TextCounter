@@ -24,7 +24,7 @@ services:
     depends_on:
       - db
     environment:
-      - MONGO_HOST=db
+      - MONGO_HOST=3.107.13.169
       - MONGO_PORT=27017
       - MONGO_DB=BBC_analysis_db
       - MONGO_USER=mongouser
@@ -32,8 +32,7 @@ services:
       - WORKER_NAME=Master
 
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/usr/src/app
+
 
 volumes:
   mongodb_data:
