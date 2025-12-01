@@ -25,8 +25,11 @@ SECRET_KEY = 'django-insecure-u7my-4xh@f06)qyf#hc_(^&5ct+u5b_-#g9=-o7eg-=6!ja96d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    '3.107.13.169', # Master 서버의 Public IP 주소 추가
+    '127.0.0.1',    # 로컬 호스트 (보통 기본값으로 유지)
+    'localhost',    # 로컬 호스트
+]
 
 # Application definition
 
