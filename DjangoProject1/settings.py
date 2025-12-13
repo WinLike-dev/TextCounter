@@ -29,6 +29,7 @@ ALLOWED_HOSTS = [
     '3.107.13.169', # Master 서버의 Public IP 주소 추가
     '127.0.0.1',    # 로컬 호스트 (보통 기본값으로 유지)
     'localhost',    # 로컬 호스트
+    '172.31.23.207', # 현재 마스터 서버의 사설 IP
 ]
 
 # Application definition
