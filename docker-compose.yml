@@ -14,7 +14,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=1234
     volumes:
       - mongodb_data:/data/db
-
+    command: ["--bind_ip_all"]
   # 2. Django 애플리케이션 서비스 (MASTER NODE)
   app:
     build: .
