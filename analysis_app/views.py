@@ -74,6 +74,7 @@ def index(request):
 def start_distributed_rebuild_view(request):
     """[분산 병렬] DB 데이터 재생성 AJAX 요청 처리 뷰 (워커 호출)"""
     if request.method == 'POST':
+        request.session.modified = False
         try:
             # master_connector.py의 로직 호출
             response_data = distribute_importer_rebuild()
