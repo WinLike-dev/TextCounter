@@ -70,7 +70,7 @@ def index(request):
         'query_params': query_params,
     })
 
-
+@csrf_exempt
 def start_distributed_rebuild_view(request):
     """[분산 병렬] DB 데이터 재생성 AJAX 요청 처리 뷰 (워커 호출)"""
     if request.method == 'POST':
