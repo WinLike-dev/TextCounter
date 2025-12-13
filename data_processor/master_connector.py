@@ -39,9 +39,16 @@ def call_worker_rebuild(worker_info: Dict[str, Any]) -> Dict[str, Any]:
 
         response_data["communication_time"] = comm_end_time - start_time
 
-        if response.status_code == 200:
+        if response.status_code == 200 or response.status_code == 202:
+            # 워커가 보낸 JSON 본문을 파싱
             worker_response = response.json()
-            response_data["status"] = worker_response.get("status", "SUCCESS")
+
+            # 202인 경우 상태를 'ACCEPTED'로 설정
+            if response.status_code == 202:
+                response_data["status"] = "ACCEPTED"
+            else:
+                response_data["status"] = worker_response.get("status", "SUCCESS")
+
             response_data["message"] = worker_response.get("message", "워커 처리 성공")
             response_data["processing_time"] = worker_response.get("processing_time", 0.0)
             response_data["records_inserted"] = worker_response.get("records_inserted", 0)
