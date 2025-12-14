@@ -16,11 +16,13 @@ services:
       - mongodb_data:/data/db
     command: mongod --bind_ip 0.0.0.0
     healthcheck:
-      test: [ "CMD", "mongo", "--eval", "db.runCommand('ping').ok" ]
+      # 🌟 2. test 수정: mongouser와 1234 암호로 admin DB에 인증 후 ping 시도 🌟
+      test: [ "CMD", "mongo", "admin", "-u", "mongouser", "-p", "1234", "--authenticationDatabase", "admin", "--eval", "db.runCommand('ping').ok" ]
       interval: 5s
-      timeout: 2s
+      # 🌟 3. timeout 및 start_period 증가: 충분한 시간을 확보 🌟
+      timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 30s # DB가 완전히 시작되도록 30초 대기
   # 2. Django 애플리케이션 서비스 (MASTER NODE)
   app:
     build: .
