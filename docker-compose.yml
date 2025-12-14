@@ -14,7 +14,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=1234
     volumes:
       - mongodb_data:/data/db
-    command: mongod --bind_ip_all
+    command: mongod --bind_ip 0.0.0.0
     healthcheck:
       test: [ "CMD", "mongo", "--eval", "db.runCommand('ping').ok" ]
       interval: 5s
