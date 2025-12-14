@@ -14,14 +14,6 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=1234
     volumes:
       - mongodb_data:/data/db
-    healthcheck:
-      # 🌟 2. test 수정: mongouser와 1234 암호로 admin DB에 인증 후 ping 시도 🌟
-      test: [ "CMD", "mongo", "admin", "-u", "mongouser", "-p", "1234", "--authenticationDatabase", "admin", "--eval", "db.runCommand('ping').ok" ]
-      interval: 5s
-      # 🌟 3. timeout 및 start_period 증가: 충분한 시간을 확보 🌟
-      timeout: 5s
-      retries: 5
-      start_period: 30s # DB가 완전히 시작되도록 30초 대기
   # 2. Django 애플리케이션 서비스 (MASTER NODE)
   app:
     build: .
@@ -29,8 +21,7 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      db:
-          condition: service_healthy
+      - db
     environment:
       - MONGO_HOST=db
       - MONGO_PORT=27017
