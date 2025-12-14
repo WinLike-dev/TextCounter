@@ -15,6 +15,12 @@ services:
     volumes:
       - mongodb_data:/data/db
     command: mongod --bind_ip_all
+    healthcheck:
+      test: [ "CMD", "mongo", "--eval", "db.runCommand('ping').ok" ]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+      start_period: 10s
   # 2. Django 애플리케이션 서비스 (MASTER NODE)
   app:
     build: .
