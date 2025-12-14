@@ -31,6 +31,7 @@ services:
       - MONGO_PASS=1234
       - WORKER_NAME=Master
 
+    entrypoint: /usr/src/app/entrypoint.sh
     command: python manage.py runserver 0.0.0.0:8000
 
 

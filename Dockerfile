@@ -20,7 +20,8 @@ RUN python -m textblob.download_corpora lite
 
 # 프로젝트의 모든 파일(Django 코드, data_processor 등)을 작업 디렉토리로 복사
 COPY . .
-
+COPY entrypoint.sh /usr/src/app/
+RUN chmod +x /usr/src/app/entrypoint.sh
 # 6. 포트 노출 (선택 사항이지만 명시해둡니다)
 EXPOSE 8000
 
