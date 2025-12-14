@@ -3,6 +3,10 @@
 # Python 3.10-slim 이미지를 기반으로 사용 (가볍고 효율적)
 FROM python:3.10-slim
 
+RUN apt-get update && \
+    apt-get install -y git && \
+    rm -rf /var/lib/apt/lists/*
+
 # 작업 디렉토리를 /usr/src/app으로 설정
 WORKDIR /usr/src/app
 
