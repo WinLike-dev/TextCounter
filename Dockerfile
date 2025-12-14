@@ -4,7 +4,7 @@
 FROM python:3.10-slim
 
 RUN apt-get update && \
-    apt-get install -y git && \
+    apt-get install -y git netcat-openbsd && \
     rm -rf /var/lib/apt/lists/*
 
 # 작업 디렉토리를 /usr/src/app으로 설정
