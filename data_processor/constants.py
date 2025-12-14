@@ -44,7 +44,7 @@ WORKER_CHUNK_FILES = {
 # B. 이 인스턴스(컨테이너)의 역할 및 파일 경로 동적 설정
 WORKER_NAME = os.environ.get('WORKER_NAME', 'Master')
 WORKER_FILE_PATH = WORKER_CHUNK_FILES.get(WORKER_NAME, None)
-WORKER_SERVER = "172.31.23.129"
+WORKER_SERVER = "3.107.253.129"
 
 # C. 🌟 마스터가 사용할 워커 주소 목록 (Public IP 기반) 🌟
 #    * 중요: 이 IP를 각 워커 디바이스의 실제 Public/Private IP로 대체해야 합니다.
