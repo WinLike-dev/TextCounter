@@ -7,7 +7,7 @@ import time
 from .constants import WORKER_ADDRESSES
 
 WORKER_REBUILD_PATH = "/rebuild"
-TIMEOUT_SECONDS = 300  # 5분 타임아웃
+TIMEOUT_SECONDS = 3000  # 50분 타임아웃
 
 
 def call_worker_rebuild(worker_info: Dict[str, Any]) -> Dict[str, Any]:

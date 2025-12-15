@@ -5,8 +5,6 @@ from .constants import DB_NAME, RECORD_NOUNS_COLLECTION, TOP_NOUNS_CACHE_COLLECT
 import sys
 
 
-# ... (기존 extract_and_filter_proper_nouns, parse_tags, process_worker_files 함수 유지) ...
-
 # 🌟 새로운 DB 초기화 함수 🌟
 def reset_all_db():
     client = get_mongodb_client()
