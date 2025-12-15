@@ -24,11 +24,11 @@ def generate_word_cloud_image(word_counts: List[Dict[str, int]]) -> Optional[str
 
     try:
         # 폰트 경로 필요시 수정
-        font_path = 'static/malgun.ttf'
+        # font_path = 'static/malgun.ttf'
         wc = WordCloud(
             background_color="white",
             width=800, height=400, max_words=len(word_freq_dict),
-            font_path=font_path
+            # font_path=font_path
         )
     except ValueError:
         # 폰트가 없을 경우 기본 폰트 사용
